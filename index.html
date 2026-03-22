@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Oferta Especial Shopee</title>
+    <style>
+        /* Estilos Gerais para Mobile */
+        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f7f7f7; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .card { background: white; width: 100%; max-width: 380px; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
+        
+        /* Título e Passos */
+        h2 { color: #333; margin-top: 0; font-size: 1.6rem; margin-bottom: 25px; font-weight: 800; }
+        .step { text-align: left; margin-bottom: 20px; color: #444; font-size: 1.05rem; line-height: 1.6; }
+        .step strong { color: #ee4d2d; font-size: 1.2rem; }
+
+        /* Área do ID Visível */
+        .id-container { background-color: #f0f0f0; border: 2px dashed #ccc; padding: 15px; border-radius: 10px; margin-top: 10px; margin-bottom: 15px; text-align: center; }
+        .id-text { font-family: 'Courier New', Courier, monospace; font-size: 1.4rem; font-weight: bold; color: #333; letter-spacing: 1px; }
+
+        /* Botão de Copiar (Estilo Shopee) */
+        .btn-copy { background: linear-gradient(180deg, #ff5722 0%, #ee4d2d 100%); color: white; border: none; width: 100%; padding: 18px; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 5px 15px rgba(238, 77, 45, 0.3); outline: none; -webkit-tap-highlight-color: transparent; }
+        .btn-copy:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(238, 77, 45, 0.2); }
+
+        /* Toast de Confirmação (Notificação Flutuante) */
+        #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 12px 24px; position: fixed; z-index: 1; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 15px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s, bottom 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 40px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Siga os passos:</h2>
+    
+    <div class="step">
+        <strong>1.</strong> Copie o ID do produto abaixo:
+        <div class="id-container">
+            <span class="id-text" id="productId">BPC-FYT-VXX</span>
+        </div>
+        <button class="btn-copy" onclick="copyId()" id="mainBtn">CLIQUE PARA COPIAR</button>
+    </div>
+
+    <div class="step">
+        <strong>2.</strong> Abra o App <strong>Shopee</strong> e cole na busca.
+    </div>
+
+    <div class="step">
+        <strong>3.</strong> Finalize seu pedido com cupom.
+    </div>
+</div>
+
+<div id="toast">✅ ID Copiado!</div>
+
+<script>
+    function copyId() {
+        // Pega o texto do ID
+        const idText = document.getElementById('productId').innerText;
+        const btn = document.getElementById('mainBtn');
+        
+        // Cria elemento temporário para copiar (método compatível com todos os celulares)
+        const el = document.createElement('textarea');
+        el.value = idText;
+        el.setAttribute('readonly', '');
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        
+        // Seleciona e copia
+        const selected = document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        if (selected) {
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(selected);
+        }
+
+        // Feedback Visual 1: Mudar texto do botão
+        btn.innerText = "COPIADO!";
+        btn.style.background = "#28a745"; // Muda para verde temporariamente
+        btn.style.boxShadow = "0 5px 15px rgba(40, 167, 69, 0.3)";
+
+        // Feedback Visual 2: Mostrar o Toast (notificação)
+        var x = document.getElementById("toast");
+        x.className = "show";
+        
+        // Resetar botão e toast após 2.5 segundos
+        setTimeout(function(){ 
+            x.className = x.className.replace("show", ""); 
+            btn.innerText = "CLIQUE PARA COPIAR";
+            btn.style.background = "linear-gradient(180deg, #ff5722 0%, #ee4d2d 100%)";
+            btn.style.boxShadow = "0 5px 15px rgba(238, 77, 45, 0.3)";
+        }, 2500);
+    }
+</script>
+
+</body>
+</html>
