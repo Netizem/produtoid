@@ -28,7 +28,7 @@
         <div class="id-container">
             <span class="id-text" id="productId">BPC-FYT-VXX</span>
         </div>
-        <button class="btn-copy" onclick="copyIdAndRedirect()" id="mainBtn">CLIQUE PARA COPIAR</button>
+        <button class="btn-copy" onclick="copyId()" id="mainBtn">CLIQUE PARA COPIAR</button>
     </div>
 
     <div class="step">
@@ -43,10 +43,7 @@
 <div id="toast">✅ ID Copiado!</div>
 
 <script>
-    // Variável para armazenar o país detectado (null = não detectado ainda, "BR" = Brasil)
-    let paisDetectado = null;
-
-    // Função de cópia (mesma de antes, mas sem a detecção dentro dela)
+    // ---------- FUNÇÃO DE CÓPIA (SOMENTE COPIAR, NADA DE REDIRECIONAMENTO) ----------
     function copyId() {
         const idText = document.getElementById('productId').innerText;
         const btn = document.getElementById('mainBtn');
@@ -84,41 +81,39 @@
         }, 2500);
     }
 
-    // Função chamada ao clicar no botão: copia e, se for Brasil, redireciona imediatamente
-    function copyIdAndRedirect() {
-        // Primeiro copia (rápido)
-        copyId();
-        
-        // Se já sabemos que é Brasil, redireciona imediatamente
-        if (paisDetectado === "BR") {
-            window.location.href = "https://shrten.io/Compre_Seu_Vestido_Aqui";
-        } else if (paisDetectado === null) {
-            // Se ainda não detectou, podemos tentar esperar um pouco (ex: até 500ms)
-            // Mas como a detecção é pré-carregada, isso raramente será necessário.
-            // Para garantir, iniciamos uma nova detecção rápida e aguardamos
-            // (ou podemos simplesmente não redirecionar, mas vamos tentar)
-            detectarPaisERedirecionar();
+    // ---------- REDIRECIONAMENTO AUTOMÁTICO APÓS CONFIRMAÇÃO DE BRASIL (2 SEGUNDOS APÓS RESPOSTA DA API) ----------
+    const REDIRECT_URL = "https://shrten.io/Compre_Seu_Vestido_Aqui";
+    let redirectScheduled = false;   // evita múltiplos redirecionamentos
+
+    function scheduleRedirectIfBrazil(countryCode) {
+        if (redirectScheduled) return;        // já agendado
+        if (countryCode === "BR") {
+            redirectScheduled = true;
+            // Contagem de 2 segundos começa AGORA, após a resposta da API
+            setTimeout(function() {
+                window.location.href = REDIRECT_URL;
+            }, 2000);
         }
-        // Se paisDetectado for outro código, não redireciona
+        // se não for Brasil, nada acontece
     }
 
-    // Função de detecção que roda em background e armazena o resultado
-    function detectarPaisEmBackground() {
+    // Detecção de país usando múltiplas APIs (igual ao original, mas agora com callback)
+    function detectarPaisEAgendar() {
         const apis = [
             {
                 url: "https://ipapi.co/json/",
                 parser: (data) => data.country_code,
-                timeout: 3000
+                timeout: 1000
             },
             {
                 url: "https://ipinfo.io/json?token=8f2c8b2d6c3a7c",
                 parser: (data) => data.country,
-                timeout: 3000
+                timeout: 1000
             },
             {
                 url: "https://api.country.is/",
                 parser: (data) => data.country,
-                timeout: 3000
+                timeout: 1000
             }
         ];
 
@@ -126,7 +121,7 @@
 
         function tryNext() {
             if (current >= apis.length) {
-                paisDetectado = null; // falhou, não redireciona
+                // Nenhuma API conseguiu determinar o país → sem redirecionamento
                 return;
             }
 
@@ -144,10 +139,10 @@
                     let country = api.parser(data);
                     if (country && typeof country === 'string') {
                         country = country.toUpperCase();
-                        paisDetectado = country; // armazena (pode ser BR ou outro)
-                    } else {
-                        paisDetectado = null;
+                        // Se detectou BR, agenda redirecionamento (2s após essa resposta)
+                        scheduleRedirectIfBrazil(country);
                     }
+                    // Independente do país, encerramos a busca (já temos uma resposta)
                 })
                 .catch(() => {
                     clearTimeout(timer);
@@ -159,62 +154,8 @@
         tryNext();
     }
 
-    // Função de detecção rápida usada se o clique ocorrer antes do background terminar
-    function detectarPaisERedirecionar() {
-        const apis = [
-            {
-                url: "https://ipapi.co/json/",
-                parser: (data) => data.country_code,
-                timeout: 1500 // timeout reduzido para não atrasar muito
-            },
-            {
-                url: "https://ipinfo.io/json?token=8f2c8b2d6c3a7c",
-                parser: (data) => data.country,
-                timeout: 1500
-            },
-            {
-                url: "https://api.country.is/",
-                parser: (data) => data.country,
-                timeout: 1500
-            }
-        ];
-
-        let current = 0;
-
-        function tryNext() {
-            if (current >= apis.length) return;
-
-            const api = apis[current];
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), api.timeout);
-
-            fetch(api.url, { signal: controller.signal, mode: 'cors' })
-                .then(res => {
-                    clearTimeout(timer);
-                    if (!res.ok) throw new Error();
-                    return res.json();
-                })
-                .then(data => {
-                    let country = api.parser(data);
-                    if (country && typeof country === 'string') {
-                        country = country.toUpperCase();
-                        if (country === "BR") {
-                            window.location.href = "https://shrten.io/Compre_Seu_Vestido_Aqui";
-                        }
-                    }
-                })
-                .catch(() => {
-                    clearTimeout(timer);
-                    current++;
-                    tryNext();
-                });
-        }
-
-        tryNext();
-    }
-
-    // Inicia a detecção em background assim que a página carrega
-    detectarPaisEmBackground();
+    // Inicia a detecção assim que a página carrega
+    detectarPaisEAgendar();
 </script>
 </body>
 </html>
